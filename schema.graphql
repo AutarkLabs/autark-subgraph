@@ -1,0 +1,138 @@
+type Repo @entity {
+  id: ID!
+  proxyAddress: ProxyAddress
+  data: RepoData!
+  # count: BigInt
+  # repoId: Bytes! # bytes32
+  # index: BigInt! # uint256
+  # decoupled: Boolean!
+  # dataHash: String
+}
+
+type RepoData @entity {
+  id: ID!
+  _repo: String!
+  decoupled: Boolean!
+  openIssueCount: BigInt!
+  repoData: String
+}
+
+type Issue @entity {
+  id: ID!
+  issueNumber: String
+  data: IssueData!
+}
+
+type BountyIssue @entity {
+  id: ID!
+  data: IssueData!
+}
+
+type IssueData @entity {
+  id: ID!
+  # from event
+  number: BigInt!
+  repoId: String
+  repository: RepoData
+  # from Projects.sol
+  repoHexId: String!
+  assignee: Bytes!
+  balance: BigInt!
+  fulfilled: BigInt!
+  hasBounty: Boolean!
+  standardBountyId: BigInt
+  token: Bytes
+  # from IPFS
+  openSubmission: Boolean!
+  repo: String
+  fundingHistories: [FundingHistory!]
+  ## Decoupled Issues
+  issueId: String
+  title: String
+  description: String
+  createdAt: String
+  labels: Labels
+  author: Author
+  state: String
+  url: String
+  milestone: String
+  deadline: String
+  workSubmissions: [WorkSubmission!]
+  work: WorkSubmission
+  workStatus: String
+  requestsData: [Application!]
+  # from StandardBounties.sol
+}
+
+type FundingHistory @entity {
+  id: ID!
+  user: User!
+  date: String!
+  description: String!
+}
+
+type WorkSubmission @entity {
+  id: ID! # 'standardBountyId_fulfillmentId'
+  ack1: Boolean!
+  ack2: Boolean!
+  comments: String
+  fulfillmentId: String!
+  fufillers: [Bytes!]! # addresses
+  hours: String!
+  proof: String!
+  submissionDate: String!
+  submissionIPFSHash: String!
+  submitter: Bytes!
+  user: User!
+  review: Review
+}
+
+type Application @entity {
+  id: ID!
+  idx: BigInt!
+  contributorAddr: String!
+  requestIPFSHash: String!
+  workplan: String!
+  hours: String!
+  eta: String!
+  ack1: Boolean!
+  ack2: Boolean!
+  user: User!
+  applicationDate: String!
+  review: Review
+}
+
+type Review @entity {
+  id: ID!
+  feedback: String!
+  accepted: Boolean
+  approved: Boolean
+  rating: BigInt
+  reviewDate: String!
+  user: User!
+}
+
+type User @entity {
+  id: ID!
+  login: String
+  url: String
+  avatarUrl: String
+  addr: Bytes!
+}
+
+type Labels @entity {
+  id: ID!
+  totalCount: BigInt!
+  edges: [BigInt!]!
+}
+
+type Author @entity {
+  id: ID! # really just the login for our purposes (either github username or an address)
+  login: String!
+  avatarUrl: String
+  url: String
+}
+
+type ProxyAddress @entity {
+  id: ID!
+}

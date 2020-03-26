@@ -1,0 +1,90 @@
+specVersion: 0.0.2
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: StandardBounties
+    network: mainnet
+    source: 
+      address: "0x08C18B4E04386F2FA729623d697729F85823882F"
+      abi: StandardBounties
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.3
+      language: wasm/assemblyscript
+      entities:
+        - BountyIssued
+        - BountyFulfilled
+        - ActionPerformed
+      abis:
+        - name: StandardBounties
+          file: ./abis/StandardBounties.json
+      eventHandlers:
+        - event: BountyIssued(uint256,address,address[],address[],string,uint256,address,uint256)
+          handler: handleBountyIssued
+        - event: BountyFulfilled(uint256,uint256,address[],string,address)
+          handler: handleBountyFulfilled
+        - event: ActionPerformed(uint256,address,string)
+          handler: handleActionPerformed
+      file: ./src/bounties.ts
+  - kind: ethereum/contract
+    name: Projects
+    network: mainnet
+    source:
+      address: "0xf7e9307e9a2e72fdba2343c907c50615339ad8bd"
+      abi: Projects
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.3
+      language: wasm/assemblyscript
+      entities:
+        - RepoAdded
+        - RepoRemoved
+        - RepoUpdated
+        - IssueUpdated
+        - BountyRemoved
+        - IssueCurated
+        - BountySettingsChanged
+        - AssignmentRequested
+        - AssignmentApproved
+        - AssignmentRejected
+        - SubmissionAccepted
+        - SubmissionRejected
+        - AwaitingSubmissions
+        - ScriptResult
+        - RecoverToVault
+      abis:
+        - name: Projects
+          file: ./abis/Projects.json
+      eventHandlers:
+        - event: RepoAdded(indexed bytes32,uint256,bool)
+          handler: handleRepoAdded
+        - event: RepoRemoved(indexed bytes32,uint256)
+          handler: handleRepoRemoved
+        - event: RepoUpdated(indexed bytes32,uint256,string)
+          handler: handleRepoUpdated
+        - event: IssueUpdated(bytes32,uint256,uint256,uint256,string)
+          handler: handleIssueUpdated
+        - event: BountyRemoved(bytes32,uint256,uint256)
+          handler: handleBountyRemoved
+        - event: IssueCurated(bytes32)
+          handler: handleIssueCurated
+        - event: BountySettingsChanged()
+          handler: handleBountySettingsChanged
+        - event: AssignmentRequested(indexed bytes32,uint256)
+          handler: handleAssignmentRequested
+        - event: AssignmentApproved(address,indexed bytes32,uint256)
+          handler: handleAssignmentApproved
+        - event: AssignmentRejected(address,indexed bytes32,uint256)
+          handler: handleAssignmentRejected
+        - event: SubmissionAccepted(uint256,bytes32,uint256)
+          handler: handleSubmissionAccepted
+        - event: SubmissionRejected(uint256,bytes32,uint256)
+          handler: handleSubmissionRejected
+        - event: AwaitingSubmissions(bytes32,uint256)
+          handler: handleAwaitingSubmissions
+        - event: ScriptResult(indexed address,bytes,bytes,bytes)
+          handler: handleScriptResult
+        - event: RecoverToVault(indexed address,indexed address,uint256)
+          handler: handleRecoverToVault
+      file: ./src/projects.ts
