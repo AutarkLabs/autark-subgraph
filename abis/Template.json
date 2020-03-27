@@ -1,0 +1,29 @@
+[{
+  "anonymous": false,
+  "inputs": [
+    {
+      "indexed": false,
+      "name": "token",
+      "type": "address"
+    }
+  ],
+  "name": "DeployToken",
+  "type": "event"
+},
+{
+  "anonymous": false,
+  "inputs": [
+    {
+      "indexed": false,
+      "name": "appProxy",
+      "type": "address"
+    },
+    {
+      "indexed": false,
+      "name": "appId",
+      "type": "bytes32"
+    }
+  ],
+  "name": "InstalledApp",
+  "type": "event"
+}]

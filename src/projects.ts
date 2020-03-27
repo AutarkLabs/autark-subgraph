@@ -29,21 +29,25 @@ import {
   User, 
   BountyIssue,
   Application,
-  Review
+  Review,
+  ExperienceLevel,
+  BountySettings
 } from "../generated/schema"
 import { BountyIssued } from "../generated/StandardBounties/StandardBounties"
+import { StandardBounties } from "../generated/templates"
 
 const ANY_ADDRESS = '0xffffffffffffffffffffffffffffffffffffffff'
 
 export function handleRepoAdded(event: RepoAdded): void {
   // Entities can be loaded from the store using a string ID; this ID
   // needs to be unique across all entities of the same type
-  let repo = Repo.load(event.params.repoId.toHex())
+  let id = event.address.toHex() + '_' + event.params.repoId.toHex()
+  let repo = Repo.load(id)
 
   // Entities only exist after they have been saved to the store;
   // `null` checks allow to create entities on demand
   if (repo == null) {
-    repo = new Repo(event.params.repoId.toHex())
+    repo = new Repo(id)
 
     // Entity fields can be set using simple assignments
     // entity.count = BigInt.fromI32(0)
@@ -57,7 +61,7 @@ export function handleRepoAdded(event: RepoAdded): void {
   // entity.index = event.params.index
   // entity.decoupled = event.params.decoupled
   repo.data = repo.id
-
+  repo.proxyAddress = event.address as Bytes
   let contract = Contract.bind(event.address)
   // don't bother adding repo to store if it's been deleted
   if (!contract.isRepoAdded(event.params.repoId)) {
@@ -65,9 +69,9 @@ export function handleRepoAdded(event: RepoAdded): void {
   }
   let repoContractData = contract.getRepo(event.params.repoId)
 
-  let data = RepoData.load(event.params.repoId.toHex())
+  let data = RepoData.load(id)
   if (data == null) {
-    data = new RepoData(event.params.repoId.toHex())
+    data = new RepoData(id)
   }
   if (!event.params.decoupled) {
     data._repo = event.params.repoId.toString()
@@ -102,40 +106,41 @@ export function handleRepoAdded(event: RepoAdded): void {
 }
 
 export function handleRepoRemoved(event: RepoRemoved): void {
-  let entity = Repo.load(event.params.repoId.toHex())
+  let id = event.address.toHex() + '_' + event.params.repoId.toHex()
+  let entity = Repo.load(id)
 
   // Entities only exist after they have been saved to the store;
   // `null` checks allow to create entities on demand
   if (entity != null) {
-    store.remove('Repo', event.params.repoId.toHex())
-    store.remove('RepoData', event.params.repoId.toHex())
+    store.remove('Repo', id)
+    store.remove('RepoData', id)
     // Entity fields can be set using simple assignments
     // entity.count = BigInt.fromI32(0)
   }
 }
 
 export function handleRepoUpdated(event: RepoUpdated): void {
-  let repoData = RepoData.load(event.params.repoId.toHex())
+  let id = event.address.toHex() + '_' + event.params.repoId.toHex()
+  let repoData = RepoData.load(id)
   if (repoData != null) {
-    repoData.repoData = event.params.repoData
+    repoData.repoData = id
     repoData.save()
-
   }
 }
 
 export function handleIssueUpdated(event: IssueUpdated): void {
   let contract = Contract.bind(event.address)
-  if (!contract.isRepoAdded(event.params.repoId)) {
-    return
-  }
-  let repoDecoupled = RepoData.load(event.params.repoId.toHex()).decoupled
+
+  let repoId = event.address.toHex() + '_' + event.params.repoId.toHex()
+  let repoDecoupled = RepoData.load(repoId).decoupled
   
-  let issueId = event.params.repoId.toHexString() + '_' + event.params.issueNumber.toString()
+  let issueId = repoId + '_' + event.params.issueNumber.toString()
   let issueData = IssueData.load(issueId)
   if (issueData == null) {
     let issue = new Issue(issueId)
     issueData = new IssueData(issueId)
     issue.data = issueId
+    issue.proxyAddress = event.address as Bytes
     issue.issueNumber = event.params.issueNumber.toString()
     issue.save()
   }
@@ -284,11 +289,50 @@ export function handleIssueCurated(event: IssueCurated): void {}
 export function handleBountySettingsChanged(
   event: BountySettingsChanged
 ): void {
+  let projects = Contract.bind(event.address)
+  let settings = projects.getSettings()
+
   let proxy = ProxyAddress.load(event.address.toHex())
   if (proxy == null) {
     proxy = new ProxyAddress(event.address.toHex())
     proxy.save()
+    let bountiesInstance = ProxyAddress.load(settings.value5.toHex())
+    if (bountiesInstance == null) {
+      StandardBounties.create(settings.value5)
+      bountiesInstance = new ProxyAddress(settings.value5.toHex())
+      bountiesInstance.save()
+    }
   }
+
+  log.info('levels: {}',[settings.value1[0].toHex()])
+  let expMultipliers: string[]
+  let expLevels: string[]
+  let expLvls: string[]
+
+  for (let index = 0; index < settings.value0.length; index++) {
+    expMultipliers.push(settings.value0[index].toString())
+    expLevels.push(settings.value1[index].toHex())
+
+    let mul = settings.value0[index].toBigDecimal()
+    let name = settings.value1[index]
+    let id = name.toString() + '_' + mul.toString()
+    let expLvl = new ExperienceLevel(id)
+    expLvl.name = name.toString()
+    expLvl.mul = mul
+    expLvl.save()
+    expLvls.push(id)
+
+  }
+  let bountySettings = new BountySettings(event.address.toHex())
+  bountySettings.expLevels = expLevels
+  bountySettings.expMultipliers = expMultipliers
+  bountySettings.baseRate = settings.value2
+  bountySettings.expLvls = expLvls
+  bountySettings.bountyDeadline = settings.value3.toString()
+  bountySettings.bountyCurrency = settings.value4 as Bytes
+  bountySettings.bountyAllocator = settings.value5 as Bytes
+  bountySettings.fundingModel = settings.value2 > BigInt.fromI32(0) ? 'hourly' : 'fixed'
+  bountySettings.save()
 }
 
 export function handleAssignmentRequested(event: AssignmentRequested): void {
@@ -307,7 +351,7 @@ export function handleAssignmentRequested(event: AssignmentRequested): void {
     return
   }
   let applicationJson = json.fromBytes(applicationBytes as Bytes).toObject()
-  let issueId = event.params.repoId.toHexString() + '_' + event.params.issueNumber.toString()
+  let issueId = event.address.toHex() + '_' + event.params.repoId.toHex() + '_' + event.params.issueNumber.toString()
   let applicationId = issueId + '_' + applicant.value0.toHex()
   let application = new Application(applicationId)
   application.idx = appNo
@@ -336,7 +380,7 @@ export function handleAssignmentRequested(event: AssignmentRequested): void {
 }
 
 export function handleAssignmentApproved(event: AssignmentApproved): void {
-  let issueId = event.params.repoId.toHex() + '_' + event.params.issueNumber.toString()
+  let issueId = event.address.toHex() + '_' + event.params.repoId.toHex() + '_' + event.params.issueNumber.toString()
   let appId = issueId + '_' + event.params.applicant.toHex()
   let applicant = Application.load(appId)
   if (applicant == null) {
@@ -379,7 +423,7 @@ export function handleAssignmentApproved(event: AssignmentApproved): void {
 }
 
 export function handleAssignmentRejected(event: AssignmentRejected): void {
-  let issueId = event.params.repoId.toHex() + '_' + event.params.issueNumber.toString()
+  let issueId = event.address.toHex() + '_' + event.params.repoId.toHex() + '_' + event.params.issueNumber.toString()
   let appId = issueId + '_' + event.params.applicant.toHex()
   let applicant = Application.load(appId)
   if (applicant == null) {
@@ -413,7 +457,7 @@ export function handleAssignmentRejected(event: AssignmentRejected): void {
 }
 
 export function handleSubmissionAccepted(event: SubmissionAccepted): void {
-  let issueId = event.params.repoId.toHex() + '_' + event.params.issueNumber.toString()
+  let issueId = event.address.toHex() + '_' + event.params.repoId.toHex() + '_' + event.params.issueNumber.toString()
   let issueData = new IssueData(issueId)
   issueData.workStatus = 'fulfilled'
   issueData.save()

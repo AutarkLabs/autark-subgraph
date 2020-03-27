@@ -1,6 +1,6 @@
 type Repo @entity {
   id: ID!
-  proxyAddress: ProxyAddress
+  proxyAddress: Bytes
   data: RepoData!
   # count: BigInt
   # repoId: Bytes! # bytes32
@@ -19,12 +19,13 @@ type RepoData @entity {
 
 type Issue @entity {
   id: ID!
+  proxyAddress: Bytes
   issueNumber: String
   data: IssueData!
 }
 
 type BountyIssue @entity {
-  id: ID!
+  id: ID! # standardBountyId
   data: IssueData!
 }
 
@@ -102,6 +103,24 @@ type Application @entity {
   review: Review
 }
 
+type BountySettings @entity {
+  id: ID!
+  expMultipliers: [String!]!
+  expLevels: [String!]!
+  baseRate: BigInt!
+  bountyDeadline: String!
+  bountyCurrency: Bytes
+  bountyAllocator: Bytes!
+  expLvls: [ExperienceLevel!]!
+  fundingModel: String!
+}
+
+type ExperienceLevel @entity {
+  id: ID!
+  mul: BigDecimal!
+  name: String!
+}
+
 type Review @entity {
   id: ID!
   feedback: String!
@@ -135,4 +154,32 @@ type Author @entity {
 
 type ProxyAddress @entity {
   id: ID!
+}
+
+type Vault @entity {
+  id: ID! # dao Address
+  addr: Bytes!
+}
+
+type DaoToken @entity {
+  id: ID!
+  kernel: Bytes!
+  addr: Bytes!
+  symbol: String!
+  decimals: String!
+  balance: BigInt!
+  isMinime: Boolean!
+}
+
+type NewToken @entity {
+  id: ID!
+  addr: Bytes!
+  symbol: String
+  decimals: String
+  isMinime: Boolean!
+}
+
+type DaoTokenList @entity {
+  id: ID!
+  list: [String!]!
 }
