@@ -25,7 +25,7 @@ This subgraph currently composes projects state on a local aragon devchain and m
     ```bash
     $ npm i && npm run codegen
     ```
-    Each time the subgraph manifest graphql schema is modified, rerun `codegen` as needed.
+    Each time the subgraph manifest or graphql schema is modified, rerun `codegen` as needed.
 5. Finally, in a second terminal:
     ```bash
     $ npm run create-local && npm run deploy-local-watch
