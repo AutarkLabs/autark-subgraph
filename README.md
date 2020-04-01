@@ -6,7 +6,7 @@ This subgraph currently composes projects state on a local aragon devchain and m
 ## Getting Started on local development
 1. Run 
     ```bash
-    $ npm i -g graph
+    $ npm install -g @graphprotocol/graph-cli
     ```
 
 2. Then run: 
