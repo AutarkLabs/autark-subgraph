@@ -16,7 +16,7 @@ import {
   AwaitingSubmissions,
   ScriptResult,
   RecoverToVault,
-} from "../generated/Projects/Projects"
+} from "../generated/templates/Projects/Projects"
 import { 
   Repo, 
   RepoData, 
@@ -33,7 +33,6 @@ import {
   ExperienceLevel,
   BountySettings
 } from "../generated/schema"
-import { BountyIssued } from "../generated/StandardBounties/StandardBounties"
 import { StandardBounties } from "../generated/templates"
 
 const ANY_ADDRESS = '0xffffffffffffffffffffffffffffffffffffffff'
@@ -323,6 +322,8 @@ export function handleBountySettingsChanged(
     expLvls.push(id)
 
   }
+  log.info('expectedlevel multipliers: {}',[settings.value0[0].toString()])
+  log.info('level multipliers: {}',[expMultipliers.toString()])
   let bountySettings = new BountySettings(event.address.toHex())
   bountySettings.expLevels = expLevels
   bountySettings.expMultipliers = expMultipliers

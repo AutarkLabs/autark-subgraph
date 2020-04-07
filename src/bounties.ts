@@ -4,7 +4,7 @@ import {
   BountyFulfilled,
   ActionPerformed,
   BountyIssued
-} from "../generated/StandardBounties/StandardBounties"
+} from "../generated/templates/StandardBounties/StandardBounties"
 import { ProxyAddress, BountyIssue, IssueData, WorkSubmission, Review } from "../generated/schema"
 import { newUser } from "./projects"
 
