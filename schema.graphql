@@ -12,8 +12,10 @@ type Repo @entity {
 type RepoData @entity {
   id: ID!
   _repo: String!
+  hexId: String!
   decoupled: Boolean!
   openIssueCount: BigInt!
+  name: String
   repoData: String
 }
 
@@ -46,7 +48,7 @@ type IssueData @entity {
   # from IPFS
   openSubmission: Boolean!
   repo: String
-  fundingHistories: [FundingHistory!]
+  fundingHistory: [FundingHistory!]
   ## Decoupled Issues
   issueId: String
   title: String
