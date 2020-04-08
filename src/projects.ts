@@ -304,9 +304,9 @@ export function handleBountySettingsChanged(
   }
 
   log.info('levels: {}',[settings.value1[0].toHex()])
-  let expMultipliers: string[]
-  let expLevels: string[]
-  let expLvls: string[]
+  let expMultipliers: string[] = []
+  let expLevels: string[] = []
+  let expLvls: string[] = []
 
   for (let index = 0; index < settings.value0.length; index++) {
     expMultipliers.push(settings.value0[index].toString())
