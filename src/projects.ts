@@ -47,7 +47,7 @@ export function handleRepoAdded(event: RepoAdded): void {
   // `null` checks allow to create entities on demand
   if (repo == null) {
     repo = new Repo(id)
-
+    repo.repoId = event.params.repoId.toHexString()
     // Entity fields can be set using simple assignments
     // entity.count = BigInt.fromI32(0)
   }
@@ -71,7 +71,7 @@ export function handleRepoAdded(event: RepoAdded): void {
   let data = RepoData.load(id)
   if (data == null) {
     data = new RepoData(id)
-    data.hexId = id
+    data.hexId = event.params.repoId.toHexString()
   }
   if (!event.params.decoupled) {
     data._repo = event.params.repoId.toString()
@@ -146,7 +146,7 @@ export function handleIssueUpdated(event: IssueUpdated): void {
   }
   issueData.repository = repoId
   issueData.number = event.params.issueNumber
-  issueData.repoHexId = repoId
+  issueData.repoHexId = event.params.repoId.toHexString()
   if (repoDecoupled) {
     issueData.repoId = event.params.repoId.toHexString()
     issueData.labels = newLabels()
@@ -167,7 +167,11 @@ export function handleIssueUpdated(event: IssueUpdated): void {
     let ipfsObj = json.fromBytes(test as Bytes).toObject()
     if (repoDecoupled) {
       issueData.title = ipfsObj.get('title').toString()
-      issueData.description = ipfsObj.get('body').toString()
+      if (ipfsObj.get('body')) {
+        issueData.description = ipfsObj.get('body').toString()
+      } else {
+        issueData.description = ipfsObj.get('description').toString()
+      }
       let login = ipfsObj.get('author').toObject().get('login').toString()
       log.info('login: {}', [login])
       issueData.author = newAuthor(login)
@@ -188,6 +192,7 @@ export function handleIssueUpdated(event: IssueUpdated): void {
       ) as Bytes
       issueData.standardBountyId = issueContractdata.value0
       issueData.deadline = ipfsObj.get('deadline').toString()
+      issueData.exp = ipfsObj.get('exp').toBigInt()
       issueData.fundingHistory = []
       getBountyIssue(issueData.standardBountyId.toString(), issueId)
       getFundingHistory(issueData as IssueData, ipfsObj.get('fundingHistory').toArray())
@@ -314,7 +319,7 @@ export function handleBountySettingsChanged(
     expMultipliers.push(settings.value0[index].toString())
     expLevels.push(settings.value1[index].toHex())
 
-    let mul = settings.value0[index].toBigDecimal()
+    let mul = settings.value0[index].div(BigInt.fromI32(100)).toBigDecimal()
     let name = settings.value1[index]
     let id = name.toString() + '_' + mul.toString()
     let expLvl = new ExperienceLevel(id)
@@ -329,12 +334,12 @@ export function handleBountySettingsChanged(
   let bountySettings = new BountySettings(event.address.toHex())
   bountySettings.expLevels = expLevels
   bountySettings.expMultipliers = expMultipliers
-  bountySettings.baseRate = settings.value2
+  bountySettings.baseRate = settings.value2.div(BigInt.fromI32(100)).toBigDecimal()
   bountySettings.expLvls = expLvls
   bountySettings.bountyDeadline = settings.value3.toString()
   bountySettings.bountyCurrency = settings.value4 as Bytes
   bountySettings.bountyAllocator = settings.value5 as Bytes
-  bountySettings.fundingModel = settings.value2 > BigInt.fromI32(0) ? 'hourly' : 'fixed'
+  bountySettings.fundingModel = settings.value2 > BigInt.fromI32(0) ? 'Hourly' : 'Fixed'
   bountySettings.save()
 }
 

@@ -3,7 +3,7 @@ type Repo @entity {
   proxyAddress: Bytes
   data: RepoData!
   # count: BigInt
-  # repoId: Bytes! # bytes32
+  repoId: String!
   # index: BigInt! # uint256
   # decoupled: Boolean!
   # dataHash: String
@@ -46,6 +46,7 @@ type IssueData @entity {
   standardBountyId: BigInt
   token: Bytes
   # from IPFS
+  exp: BigInt
   openSubmission: Boolean!
   repo: String
   fundingHistory: [FundingHistory!]
@@ -109,7 +110,7 @@ type BountySettings @entity {
   id: ID!
   expMultipliers: [String!]!
   expLevels: [String!]!
-  baseRate: BigInt!
+  baseRate: BigDecimal!
   bountyDeadline: String!
   bountyCurrency: Bytes
   bountyAllocator: Bytes!
